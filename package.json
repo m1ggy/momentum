@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently 'cd packages/web && pnpm dev' 'cd packages/api && pnpm dev'"
+    "dev": "concurrently 'cd packages/web && pnpm dev' 'cd packages/api && pnpm dev'",
+    "build": "tsc -p tsconfig.node.json"
   },
   "keywords": [],
   "author": "",
