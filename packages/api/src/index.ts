@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import firebaseApp from './lib/firebase.js';
 
 import authPlugin from './plugins/auth.js';
+import pgPlugin from './plugins/pg.js';
 
 dotenv.config({ debug: true });
 
@@ -23,6 +24,10 @@ app.setSerializerCompiler(serializerCompiler);
 await app.register(authPlugin, {
   requireAuthByDefault: true,
   checkRevoked: false,
+});
+
+await app.register(pgPlugin, {
+  connectionString: process.env.DATABASE_URI as string,
 });
 
 await app.register(fastifyAutoload, {
