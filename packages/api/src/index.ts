@@ -8,6 +8,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import firebaseApp from './lib/firebase.js';
 
 import authPlugin from './plugins/auth.js';
 
@@ -30,6 +31,7 @@ await app.register(fastifyAutoload, {
 });
 
 const PORT = Number(process.env.PORT) || 3000;
-app
-  .listen({ port: PORT, host: '0.0.0.0' })
-  .then(() => app.log.info('Server started'));
+app.listen({ port: PORT, host: '0.0.0.0' }).then(() => {
+  app.log.info('Server started');
+  console.log('Firebase App Name: ', firebaseApp.name);
+});
