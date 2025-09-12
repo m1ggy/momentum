@@ -30,11 +30,6 @@ declare module 'fastify' {
 const pgPlugin: FastifyPluginAsync<PgPluginOptions> = async (fastify, opts) => {
   const pool = new Pool({
     connectionString: opts.connectionString || process.env.DATABASE_URL,
-    ssl:
-      opts.ssl ??
-      (process.env.NODE_ENV === 'production'
-        ? { rejectUnauthorized: false }
-        : undefined),
     ...opts.poolOptions,
     options: '-c search_path=momentum,public',
   });
