@@ -1,35 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// app.tsx
+import { Flex, Spinner, Theme } from "@radix-ui/themes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect, useMemo, useState } from "react";
+import "./App.css";
+import { auth } from "./lib/firebase";
+import { routeTree } from "./routeTree.gen";
+
+const queryClient = new QueryClient();
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthReady(true);
+    });
+    return () => unsub();
+  }, []);
+
+  // Create router once
+  const router = useMemo(
+    () =>
+      createRouter({
+        routeTree,
+        defaultPendingComponent: () => (
+          <Flex justify="center" align="center">
+            <Spinner />
+          </Flex>
+        ),
+        context: { queryClient, user: null as User | null },
+        defaultPreload: "intent",
+        defaultPreloadStaleTime: 0,
+        scrollRestoration: true,
+      }),
+    []
+  );
+
+  // Keep router context in sync with latest user
+  useEffect(() => {
+    router.update({
+      context: { queryClient, user },
+    });
+  }, [router, user]);
+
+  if (!authReady) {
+    return (
+      <Theme accentColor="indigo">
+        <Flex justify="center" align="center" style={{ height: "100vh" }}>
+          <Spinner />
+        </Flex>
+      </Theme>
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Theme accentColor="indigo" panelBackground="translucent" appearance="dark">
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </Theme>
+  );
 }
 
-export default App
+export default App;
+
+// Augment the router type with the new context shape
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: ReturnType<typeof createRouter>;
+  }
+
+  interface StaticDataRouteOption {
+    isPublic?: boolean;
+  }
+}

@@ -6,7 +6,7 @@ const routes: FastifyPluginAsync = async (app) => {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
   r.get(
-    '/health',
+    '/',
     {
       schema: {
         response: {
